@@ -1,0 +1,7 @@
+fedex_air_network:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: "{{ env_var('FEDEX_DB', '../data/warehouse.duckdb') }}"
+      threads: 4

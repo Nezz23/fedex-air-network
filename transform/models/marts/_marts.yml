@@ -1,0 +1,32 @@
+version: 2
+models:
+  - name: fct_fedex_route_month
+    description: FedEx directional route by month.
+    data_tests:
+      - unique_combination:
+          columns: [month_start, origin, dest]
+    columns:
+      - name: month_start
+        data_tests: [not_null]
+      - name: origin
+        data_tests: [not_null]
+      - name: dest
+        data_tests: [not_null]
+      - name: freight_lbs
+        data_tests:
+          - not_null
+          - non_negative
+      - name: payload_lbs
+        data_tests: [non_negative]
+  - name: fct_fedex_airport_month
+    data_tests:
+      - unique_combination:
+          columns: [month_start, airport]
+  - name: fct_fedex_aircraft_month
+    data_tests:
+      - unique_combination:
+          columns: [month_start, aircraft_type]
+  - name: fct_cargo_carrier_month
+    data_tests:
+      - unique_combination:
+          columns: [month_start, carrier]

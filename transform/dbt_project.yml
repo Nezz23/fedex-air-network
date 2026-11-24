@@ -1,0 +1,15 @@
+name: fedex_air_network
+version: "1.0.0"
+profile: fedex_air_network
+model-paths: ["models"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+models:
+  fedex_air_network:
+    staging:
+      +materialized: view
+    intermediate:
+      +materialized: table
+    marts:
+      +materialized: table

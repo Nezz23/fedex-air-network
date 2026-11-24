@@ -1,0 +1,7 @@
+version: 2
+sources:
+  - name: raw
+    schema: raw
+    tables:
+      - name: t100_segment
+        description: BTS T-100 Segment (All Carriers), one row per carrier, route, aircraft type, service class and month, loaded as text.
