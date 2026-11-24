@@ -4,6 +4,9 @@ Three simple, explainable methods, each scored on the most recent 12 months it n
   seasonal_naive     next month = same month last year
   seasonal_trend     same month last year x (last 12 months / the 12 before), i.e. last year's shape at today's level
   moving_average     mean of the last 3 months (no seasonality)
+  level_x_season     today's level (last 3 months, de-seasonalized) x each month's typical share of its year.
+                     Unlike the two seasonal methods it does not carry last year's level forward, so it recovers
+                     quickly after a structural break (a lost contract, a network change).
 The method with the lowest backtest error (MAPE) is used for the forward forecast.
 """
 from __future__ import annotations
@@ -26,7 +29,25 @@ def moving_average(history: pd.Series, steps: int) -> list[float]:
     return [float(history.iloc[-3:].mean())] * steps
 
 
-METHODS = {"seasonal_naive": seasonal_naive, "seasonal_trend": seasonal_trend, "moving_average": moving_average}
+def seasonal_index(history: pd.Series) -> pd.Series:
+    """Average of each calendar month's value / its year's mean, over complete years only."""
+    df = history.to_frame("v")
+    df["year"], df["month"] = df.index.year, df.index.month
+    full = df.groupby("year").filter(lambda g: len(g) == 12)
+    full = full.assign(idx=full.v / full.groupby("year").v.transform("mean"))
+    return full.groupby("month").idx.mean()
+
+
+def level_x_season(history: pd.Series, steps: int) -> list[float]:
+    idx = seasonal_index(history)
+    recent = history.iloc[-3:]
+    level = (recent / idx.loc[recent.index.month].to_numpy()).mean()
+    months = pd.date_range(history.index[-1] + pd.offsets.MonthBegin(1), periods=steps, freq="MS").month
+    return [float(level * idx.loc[m]) for m in months]
+
+
+METHODS = {"seasonal_naive": seasonal_naive, "seasonal_trend": seasonal_trend, "moving_average": moving_average,
+           "level_x_season": level_x_season}
 
 
 def mape(actual: pd.Series, predicted: list[float]) -> float:

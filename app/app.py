@@ -120,6 +120,24 @@ with tab_peers:
         x=alt.X("month_start:T", title=None), y=alt.Y("cargo:Q", title="Cargo (lbs)", axis=alt.Axis(format="~s")),
         color=alt.Color("carrier_name:N", title=None)), width="stretch")
     st.caption("UPS, Atlas Air, Air Transport International and Kalitta Air report under their own carrier codes.")
+    st.subheader("U.S. domestic air cargo: FedEx vs UPS")
+    dom = q("""select month_start, case carrier when 'FX' then 'FedEx' else 'UPS' end carrier, domestic_cargo_lbs cargo
+               from fct_cargo_carrier_month where carrier in ('FX', '5X') order by 1""")
+    wide = dom.pivot(index="month_start", columns="carrier", values="cargo")
+    ahead = wide[wide.UPS > wide.FedEx]
+    if len(ahead):
+        st.write(f"UPS carried more U.S. domestic air cargo than FedEx in **{len(ahead)} of {len(wide)} months**, "
+                 f"the first in **{ahead.index.min():%B %Y}** and every month since. The timing matches the "
+                 "publicly reported end of FedEx's U.S. Postal Service air contract in September 2024; T-100 "
+                 "does not identify shippers, so the data shows the shift, not its cause.")
+    rule = alt.Chart(pd.DataFrame({"m": [ahead.index.min()]})).mark_rule(strokeDash=[4, 3], color=GREY).encode(
+        x="m:T") if len(ahead) else alt.Chart(pd.DataFrame())
+    st.altair_chart(alt.Chart(dom).mark_line().encode(
+        x=alt.X("month_start:T", title=None),
+        y=alt.Y("cargo:Q", title="Domestic cargo (lbs)", axis=alt.Axis(format="~s")),
+        color=alt.Color("carrier:N", scale=alt.Scale(domain=["FedEx", "UPS"], range=[PURPLE, "#8B5E34"]), title=None),
+        tooltip=[alt.Tooltip("month_start:T", format="%b %Y"), "carrier", alt.Tooltip("cargo:Q", format=",.0f")])
+        + rule, width="stretch")
 
 with tab_fc:
     series = network.set_index("month_start").cargo

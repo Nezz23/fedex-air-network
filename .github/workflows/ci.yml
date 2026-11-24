@@ -1,0 +1,26 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v7
+      - run: uv sync
+      - name: Lint
+        run: uv run ruff check .
+      - name: Unit tests
+        run: uv run pytest -q
+      - name: App runs on the committed demo database
+        run: |
+          uv run python - <<'PY'
+          from streamlit.testing.v1 import AppTest
+          at = AppTest.from_file("app/app.py", default_timeout=180).run()
+          assert not at.exception, [e.value for e in at.exception]
+          print("app OK:", [(m.label, m.value) for m in at.metric][:4])
+          PY

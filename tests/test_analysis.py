@@ -60,3 +60,14 @@ def test_disruption_rejects_bad_inputs(con):
         hub_disruption(con, "2025-10-01", "MEM", 1.5, ["IND"])
     with pytest.raises(ValueError, match="no FedEx departures"):
         hub_disruption(con, "2025-10-01", "XXX", 0.1, ["IND"])
+
+
+def test_level_x_season_recovers_from_a_structural_break():
+    from analysis.forecast import level_x_season
+    shape = [0.9, 0.8, 1.0, 1.0, 1.0, 1.0, 1.1, 1.0, 1.0, 1.1, 1.0, 1.1]
+    before = [100 * s for s in shape] * 2
+    after = [70 * s for s in shape]  # a lost contract: same seasonality, 30% lower level
+    history = monthly(before + after)
+    got = level_x_season(history, 12)
+    assert got == pytest.approx([70 * s for s in shape], rel=0.02)
+    assert seasonal_naive(history, 1)[0] == pytest.approx(63)  # copies last year: right here, but wrong after a break
