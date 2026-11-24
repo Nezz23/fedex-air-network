@@ -7,6 +7,8 @@ Memphis loses capacity.**
 Every FedEx Express flight segment reported to the U.S. Department of Transportation from January 2019 to August
 2026 (BTS T-100, 3.84 million rows across all carriers), modeled in dbt + DuckDB and explored in a Streamlit app.
 
+**Live app: [fedex-air-network.streamlit.app](https://fedex-air-network-rmcm8wjsjqpl3g2vehamfe.streamlit.app/)**
+
 ## Findings
 
 | | |
